@@ -1,4 +1,5 @@
 from .api_base import APIBaseClass
+from ..schemas.prediction_validation import PredictionRequest
 from .data_processing import *
 
 
@@ -8,11 +9,9 @@ class Assistant(APIBaseClass):
         self.router.add_api_route(
             '/assist/processing', self.prediction, methods=['POST'])
 
-    async def prediction(self, data: dict):
-        sentence = data.get("sentence")
+    async def prediction(self, prediction_request: PredictionRequest):
 
-        # Normalize the sentence
-        normalized_text = sentence_normalizer(sentence)
+        sentence = prediction_request.sentence
 
         # Tokenize the sentence
         tokenized_text = sentence_tokenizer(sentence)
@@ -23,4 +22,14 @@ class Assistant(APIBaseClass):
         # Predict the action for the sentence
         predicted_action = predict_sentence(text_vectorized)
 
-        return {"predicted_action": predicted_action}
+        if predicted_action == 'شارژ':
+
+            amount, number, operator = charge_pos_tagging(sentence)
+            return {
+                "predicted_action": predicted_action,
+                "amount": amount,
+                "number": number,
+                "operator": operator
+            }
+
+        return {'status': 400}

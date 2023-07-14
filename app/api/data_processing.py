@@ -1,5 +1,5 @@
 from sklearn.feature_extraction.text import CountVectorizer
-from hazm import word_tokenize, Normalizer, POSTagger
+from hazm import word_tokenize, POSTagger
 from hazm import word_tokenize, InformalNormalizer
 from persian_tools import phone_number, digits
 from persian import convert_fa_numbers
@@ -27,8 +27,6 @@ def sentence_normalizer(sentence):
 
 
 def sentence_tokenizer(sentence):
-    pattern = re.compile(r"\n|\t")
-    normalized_text = pattern.sub(" ", sentence)
     tokenized_text = word_tokenize(sentence)
     normalized_text = ' '.join(tokenized_text)
     return normalized_text
@@ -57,10 +55,13 @@ def predict_sentence(text_vectorized):
     return action
 
 
-def pos_tagging(sentence):
-    tagger = POSTagger(model='resources/pos_tagger.model')
-    normalized_sentence = Normalizer(
+def charge_pos_tagging(sentence):
+    tagger = POSTagger(model=os.getcwd()+'/app/models/pos_tagger.model')
+    normalized_sentence = InformalNormalizer(
         correct_spacing=True, remove_specials_chars=True).normalize(sentence)
+    normalized_sentence = [''.join(ele) for ele in normalized_sentence[0]]
+    normalized_sentence = " ".join(normalized_sentence)
+
     tokenized_sentence = word_tokenize(normalized_sentence)
     tagged_sentence = tagger.tag(tokenized_sentence)
     # print(tagged_sentence)
@@ -90,4 +91,4 @@ def pos_tagging(sentence):
     match = re.search(pattern, sentence)
     amount = digits.convert_from_word((match.group(1)))
 
-    return {amount, number, operator}
+    return amount, number, operator
