@@ -22,14 +22,14 @@ class Assistant(APIBaseClass):
         # Predict the action for the sentence
         predicted_action = predict_sentence(text_vectorized)
 
-        if predicted_action == 'شارژ':
+        # if predicted_action == 'شارژ':
 
-            amount, number, operator = charge_pos_tagging(sentence)
-            return {
-                "predicted_action": predicted_action,
-                "amount": amount,
-                "number": number,
-                "operator": operator
-            }
+        amount, number, operator = charge_pos_tagging(sentence)
+        return {
+            "predicted_action": predicted_action,
+            "amount": amount,
+            "number": number,
+            "operator": operator
+        }
 
-        return {'status': 400}
+        # return {'status': 400, 'predicted_action': predicted_action}

@@ -57,27 +57,34 @@ def predict_sentence(text_vectorized):
 
 def charge_pos_tagging(sentence):
     tagger = POSTagger(model=os.getcwd()+'/app/models/pos_tagger.model')
-    normalized_sentence = InformalNormalizer(
-        correct_spacing=True, remove_specials_chars=True).normalize(sentence)
+    normalized_sentence = InformalNormalizer(decrease_repeated_chars=True,
+                                             correct_spacing=True,
+                                             remove_specials_chars=True,
+                                             persian_style=True).normalize(sentence)
     normalized_sentence = [''.join(ele) for ele in normalized_sentence[0]]
     normalized_sentence = " ".join(normalized_sentence)
 
     tokenized_sentence = word_tokenize(normalized_sentence)
+    if 'یک' in tokenized_sentence:
+        if tokenized_sentence[tokenized_sentence.index('یک') + 1] == 'شارژ':
+            tokenized_sentence.remove('یک')
+
     tagged_sentence = tagger.tag(tokenized_sentence)
     # print(tagged_sentence)
-    # print(tagger.data_maker(tokens=[tokenized_sentence]))
+    # print(tagger.data_maker(tokens=tagged_sentence))
 
     amount = None
-    number = None
+    mobile = None
     operator = None
     operators = ["ایرانسل", "همراه اول", "رایتل"]
 
     for word, tag in tagged_sentence:
         # print(tag, word)
         if tag == 'NUM':
-            num = convert_fa_numbers(word)
-            if phone_number.validate(num):
-                number = num
+            number = convert_fa_numbers(word)
+            if phone_number.validate(number):
+                tokenized_sentence.remove(word)
+                mobile = number
 
         for keyword in operators:
             similarity_score = difflib.SequenceMatcher(
@@ -85,10 +92,24 @@ def charge_pos_tagging(sentence):
             if similarity_score >= 0.8:
                 operator = keyword
 
-    pattern = r'(\w+)\s+(?:تومان|تومن|ریال|ت)'
+    normalized_text = ' '.join(tokenized_sentence)
+    
+    pattern = r'(\d+(\s+\w+)*)\s+(تومان|ریال|ت)'
+    match = re.search(pattern, normalized_text)
+    if match:
+        amount = digits.convert_from_word((match.group(1)))
+        currency_symbol = match.group(3)
+    else:
+        pattern = r'([\w\d]+)\s+(تومان|ریال|ت)'
+        match = re.search(pattern, normalized_text)
+        if match:
+            amount = digits.convert_from_word(normalized_text)
+            currency_symbol = match.group(2)
 
-    # Find the amount
-    match = re.search(pattern, sentence)
-    amount = digits.convert_from_word((match.group(1)))
+    if currency_symbol.strip() == 'تومان' or currency_symbol.strip() == 'ت':
+        amount *= 10
 
-    return amount, number, operator
+    if 'هزاری' in normalized_text:
+        amount *= 1000
+
+    return amount, mobile, operator
