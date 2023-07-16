@@ -76,6 +76,7 @@ def charge_pos_tagging(sentence):
     amount = None
     mobile = None
     operator = None
+    currency_symbol = 'ریال'
     operators = ["ایرانسل", "همراه اول", "رایتل"]
 
     for word, tag in tagged_sentence:
@@ -93,17 +94,17 @@ def charge_pos_tagging(sentence):
                 operator = keyword
 
     normalized_text = ' '.join(tokenized_sentence)
-    
+
     pattern = r'(\d+(\s+\w+)*)\s+(تومان|ریال|ت)'
     match = re.search(pattern, normalized_text)
     if match:
         amount = digits.convert_from_word((match.group(1)))
         currency_symbol = match.group(3)
     else:
+        amount = digits.convert_from_word(normalized_text)
         pattern = r'([\w\d]+)\s+(تومان|ریال|ت)'
         match = re.search(pattern, normalized_text)
         if match:
-            amount = digits.convert_from_word(normalized_text)
             currency_symbol = match.group(2)
 
     if currency_symbol.strip() == 'تومان' or currency_symbol.strip() == 'ت':
