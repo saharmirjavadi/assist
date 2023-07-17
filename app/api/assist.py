@@ -13,8 +13,11 @@ class Assistant(APIBaseClass):
 
         sentence = prediction_request.sentence
 
+        # Normalize the sentence
+        normalizer_text = sentence_normalizer(sentence)
+
         # Tokenize the sentence
-        tokenized_text = sentence_tokenizer(sentence)
+        tokenized_text = sentence_tokenizer(normalizer_text)
 
         # Transform the sentence into a vector
         text_vectorized = sentence_transformer(tokenized_text)
