@@ -1,8 +1,9 @@
 from sklearn.feature_extraction.text import CountVectorizer
-from hazm import word_tokenize, POSTagger
-from hazm import word_tokenize, InformalNormalizer
+from hazm import word_tokenize, Normalizer, InformalNormalizer, POSTagger
 from persian_tools import phone_number, digits
+from .phone_operator import get_phone_operator
 from persian import convert_fa_numbers
+from ..schemas.phone_number_validation import PhoneNumber
 from joblib import load
 import difflib
 import re
@@ -21,7 +22,7 @@ def load_data():
 
 
 def sentence_normalizer(sentence):
-    normalizer = InformalNormalizer()
+    normalizer = Normalizer()
     normalized_text = normalizer.normalize(sentence)
     return normalized_text
 
@@ -73,7 +74,7 @@ def charge_pos_tagging(sentence):
     # print(tagged_sentence)
     # print(tagger.data_maker(tokens=tagged_sentence))
 
-    amount = None
+    amount = 1
     mobile = None
     operator = None
     currency_symbol = 'ریال'
@@ -81,6 +82,9 @@ def charge_pos_tagging(sentence):
 
     for word, tag in tagged_sentence:
         # print(tag, word)
+        if tag == 'VERB':
+            tokenized_sentence.remove(word)
+
         if tag == 'NUM':
             number = convert_fa_numbers(word)
             if phone_number.validate(number):
@@ -102,6 +106,8 @@ def charge_pos_tagging(sentence):
         currency_symbol = match.group(3)
     else:
         amount = digits.convert_from_word(normalized_text)
+        if amount == 0:
+            amount = 1
         pattern = r'([\w\d]+)\s+(تومان|ریال|ت)'
         match = re.search(pattern, normalized_text)
         if match:
@@ -112,5 +118,8 @@ def charge_pos_tagging(sentence):
 
     if 'هزاری' in normalized_text:
         amount *= 1000
+
+    if not operator and mobile:
+        operator = get_phone_operator(PhoneNumber(mobile=mobile))
 
     return amount, mobile, operator
