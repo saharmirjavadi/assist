@@ -1,16 +1,23 @@
 from .api_base import APIBaseClass
 from ..schemas.prediction_validation import PredictionRequest
 from .data_processing import *
+from ..models.assist_models import MLModel
+from ..db.dependency import get_db
+from fastapi import Depends
+from ..crud.base import BaseCRUD
+from sqlalchemy.orm import Session
 
 
 class Assistant(APIBaseClass):
     def __init__(self):
         super().__init__()
+
         self.router.add_api_route(
             '/assist/processing', self.prediction, methods=['POST'])
+        self.router.add_api_route(
+            '/assist/save_model', self.save_trained_model, methods=['POST'])
 
     async def prediction(self, prediction_request: PredictionRequest):
-
         sentence = prediction_request.sentence
 
         # Normalize the sentence
@@ -36,3 +43,16 @@ class Assistant(APIBaseClass):
         }
 
         # return {'status': 400, 'predicted_action': predicted_action}
+
+    def save_trained_model(self, db: Session = Depends(get_db)):
+        with open(os.getcwd()+"/app/models/nb-model.joblib", "rb") as f:
+            serialized_model = f.read()
+
+        base_crud = BaseCRUD(MLModel)
+        ml_model = base_crud.create(
+            db=db, accuracy='0.98', model_data=serialized_model)
+
+        db.add(ml_model)
+        db.commit()
+        db.refresh(ml_model)
+        return {"message": "Model saved successfully"}

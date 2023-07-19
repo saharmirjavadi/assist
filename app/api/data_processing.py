@@ -4,6 +4,9 @@ from persian_tools import phone_number, digits
 from .phone_operator import get_phone_operator
 from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
+from ..crud.base import BaseCRUD
+from ..models.assist_models import MLModel
+from ..db.session import SessionLocal
 from joblib import load
 import difflib
 import re
@@ -41,7 +44,10 @@ def sentence_transformer(normalized_text):
 
 
 def predict_sentence(text_vectorized):
-    loaded_model = load(os.getcwd()+'/app/models/nb-model.joblib')
+    base_crud = BaseCRUD(MLModel)
+    ml_model = base_crud.get(db=SessionLocal(), item_id=5)
+    loaded_model = load(bytes(ml_model.model_data))
+    print('***', load_data)
     predicted_proba = loaded_model.predict_proba(text_vectorized)
     max_proba = max(predicted_proba[0])
 
