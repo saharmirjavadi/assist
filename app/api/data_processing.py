@@ -11,6 +11,7 @@ from joblib import load
 import difflib
 import re
 import os
+import io
 
 
 def load_data():
@@ -45,9 +46,12 @@ def sentence_transformer(normalized_text):
 
 def predict_sentence(text_vectorized):
     base_crud = BaseCRUD(MLModel)
-    ml_model = base_crud.get(db=SessionLocal(), item_id=5)
-    loaded_model = load(bytes(ml_model.model_data))
-    print('***', load_data)
+    ml_model = base_crud.get(db=SessionLocal(), item_id=1)
+    serialized_model = ml_model.model_data
+    with io.BytesIO(serialized_model) as f:
+        loaded_model = load(f)
+
+    print('***', loaded_model)
     predicted_proba = loaded_model.predict_proba(text_vectorized)
     max_proba = max(predicted_proba[0])
 
