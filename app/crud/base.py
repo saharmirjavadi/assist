@@ -22,3 +22,9 @@ class BaseCRUD:
             db.commit()
             return True
         return False
+
+    def get_all(self, db: Session):
+        return db.query(self.model).all()
+
+    def get_latest_one(self, db: Session):
+        return db.query(self.model).order_by(self.model.id.desc()).first()

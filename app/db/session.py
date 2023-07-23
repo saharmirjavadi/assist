@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from config import Settings
 
+settings = Settings()
 
-DATABASE_URL = "postgresql://sahar:1234@localhost/assist"
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

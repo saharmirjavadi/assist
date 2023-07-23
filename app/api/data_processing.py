@@ -5,24 +5,13 @@ from .phone_operator import get_phone_operator
 from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
 from ..crud.base import BaseCRUD
-from ..models.assist_models import MLModel
+from ..models.assist_models import MLModel, TrainingData
 from ..db.session import SessionLocal
 from joblib import load
 import difflib
 import re
 import os
 import io
-
-
-def load_data():
-    dataset = []
-    with open("data.txt", "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-            if line:
-                sentence, action = line.split(" - ")
-                dataset.append(sentence)
-    return dataset
 
 
 def sentence_normalizer(sentence):
@@ -37,21 +26,23 @@ def sentence_tokenizer(sentence):
     return normalized_text
 
 
-def sentence_transformer(normalized_text):
+def sentence_transformer(normalized_text, db):
+    base_crud = BaseCRUD(TrainingData)
+    training_data = base_crud.get_all(db=db)
+    sentences = [item.sentence for item in training_data]
     vectorizer = CountVectorizer()
-    vectorizer.fit_transform(load_data())
+    vectorizer.fit_transform(sentences)
     text_vectorized = vectorizer.transform([normalized_text])
     return text_vectorized
 
 
 def predict_sentence(text_vectorized):
     base_crud = BaseCRUD(MLModel)
-    ml_model = base_crud.get(db=SessionLocal(), item_id=1)
+    ml_model = base_crud.get_latest_one(db=SessionLocal())
     serialized_model = ml_model.model_data
     with io.BytesIO(serialized_model) as f:
         loaded_model = load(f)
 
-    print('***', loaded_model)
     predicted_proba = loaded_model.predict_proba(text_vectorized)
     max_proba = max(predicted_proba[0])
 
@@ -61,9 +52,9 @@ def predict_sentence(text_vectorized):
         predicted_label_index = predicted_proba.argmax()
         action = loaded_model.classes_[predicted_label_index]
     else:
-        action = "داداش داری اشتباه میزنی"
+        action = "uncertain"
 
-    return action
+    return action, ml_model.id
 
 
 def charge_pos_tagging(sentence):
