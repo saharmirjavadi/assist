@@ -124,3 +124,34 @@ def charge_pos_tagging(sentence):
         operator = get_phone_operator(PhoneNumber(mobile=mobile))
 
     return amount, mobile, operator
+
+
+def store_user_input(sentence, action, model_id):
+    with open('user_input_log.txt', 'a', encoding='utf-8') as file:
+        file.write(f"{sentence} - {action} - {model_id}\n")
+
+
+def charge_prediction(sentence, db):
+    # Normalize the sentence
+    normalizer_text = sentence_normalizer(sentence)
+
+    # Tokenize the sentence
+    tokenized_text = sentence_tokenizer(normalizer_text)
+
+    # Transform the sentence into a vector
+    text_vectorized = sentence_transformer(tokenized_text, db)
+
+    # Predict the action for the sentence
+    predicted_action, model_id = predict_sentence(text_vectorized)
+
+    # Save user input
+    store_user_input(normalizer_text, predicted_action, model_id)
+
+    amount, number, operator = charge_pos_tagging(sentence)
+
+    return {
+        "predicted_action": predicted_action,
+        "amount": amount,
+        "number": number,
+        "operator": operator
+    }
