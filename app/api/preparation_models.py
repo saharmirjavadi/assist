@@ -6,6 +6,7 @@ from ..models.assist_models import MLModel
 from hazm import word_tokenize, Normalizer
 from sklearn.metrics import accuracy_score
 from ..crud.base import BaseCRUD
+from sklearn.pipeline import Pipeline
 import joblib
 import os
 
@@ -22,24 +23,27 @@ def naive_bayes(db):
     sentences_tokenized = [word_tokenize(sentence) for sentence in sentences_normalized]
     normalized_sentences = [' '.join(tokens) for tokens in sentences_tokenized]
 
-    vectorizer = CountVectorizer()
-    X_vectorized = vectorizer.fit_transform(normalized_sentences)
+    pipeline = Pipeline([
+        ('vectorizer', CountVectorizer()),
+        ('classifier', MultinomialNB())
+    ])
 
-    X_train, X_test, y_train, y_test = train_test_split(X_vectorized, 
-                                                        actions, 
-                                                        test_size=0.2, 
+    X_train, X_test, y_train, y_test = train_test_split(normalized_sentences,
+                                                        actions,
+                                                        test_size=0.2,
                                                         random_state=42)
 
-    classifier = MultinomialNB()
-    classifier.fit(X_train, y_train)
-    y_pred = classifier.predict(X_test)
+    # Train the pipeline
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
 
     with open(os.getcwd() + "/app/models/nb-model.joblib", "wb") as f:
-        joblib.dump(classifier, f)
+        joblib.dump(pipeline, f)
 
     with open(os.getcwd()+"/app/models/nb-model.joblib", "rb") as f:
         serialized_model = f.read()
 
     base_crud = BaseCRUD(MLModel)
     base_crud.create(db=db, accuracy=accuracy, model_data=serialized_model)
+    os.remove(os.getcwd()+"/app/models/nb-model.joblib")

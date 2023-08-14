@@ -1,4 +1,3 @@
-from sklearn.feature_extraction.text import CountVectorizer
 from hazm import word_tokenize, Normalizer, InformalNormalizer, POSTagger
 from persian_tools import phone_number, digits
 from .phone_operator import get_phone_operator
@@ -26,22 +25,18 @@ def sentence_tokenizer(sentence):
     return normalized_text
 
 
-def sentence_transformer(normalized_text, db):
-    base_crud = BaseCRUD(TrainingData)
-    training_data = base_crud.get_all(db=db)
-    sentences = [item.sentence for item in training_data]
-    vectorizer = CountVectorizer()
-    vectorizer.fit_transform(sentences)
-    text_vectorized = vectorizer.transform([normalized_text])
-    return text_vectorized
-
-
-def predict_sentence(text_vectorized):
+def predict_sentence(tokenized_text):
     base_crud = BaseCRUD(MLModel)
     ml_model = base_crud.get_latest_one(db=SessionLocal())
     serialized_model = ml_model.model_data
+
     with io.BytesIO(serialized_model) as f:
-        loaded_model = load(f)
+        loaded_pipeline = load(f)
+
+    loaded_model = loaded_pipeline.named_steps['classifier']
+    vectorizer = loaded_pipeline.named_steps['vectorizer']
+
+    text_vectorized = vectorizer.transform([tokenized_text])
 
     predicted_proba = loaded_model.predict_proba(text_vectorized)
     max_proba = max(predicted_proba[0])
@@ -72,8 +67,6 @@ def charge_pos_tagging(sentence):
             tokenized_sentence.remove('یک')
 
     tagged_sentence = tagger.tag(tokenized_sentence)
-    # print(tagged_sentence)
-    # print(tagger.data_maker(tokens=tagged_sentence))
 
     amount = 1
     mobile = None
@@ -126,9 +119,11 @@ def charge_pos_tagging(sentence):
     return amount, mobile, operator
 
 
-def store_user_input(sentence, action, model_id):
-    with open('user_input_log.txt', 'a', encoding='utf-8') as file:
-        file.write(f"{sentence} - {action} - {model_id}\n")
+def store_user_input(sentence, action, model_id, db):
+    base_crud = BaseCRUD(TrainingData)
+    training_data_obj = {'sentence': sentence,
+                         'predicted_action': action, 'model_id': model_id}
+    base_crud.create(db=db, **training_data_obj)
 
 
 def charge_prediction(sentence, db):
@@ -138,14 +133,11 @@ def charge_prediction(sentence, db):
     # Tokenize the sentence
     tokenized_text = sentence_tokenizer(normalizer_text)
 
-    # Transform the sentence into a vector
-    text_vectorized = sentence_transformer(tokenized_text, db)
-
     # Predict the action for the sentence
-    predicted_action, model_id = predict_sentence(text_vectorized)
+    predicted_action, model_id = predict_sentence(tokenized_text)
 
     # Save user input
-    store_user_input(normalizer_text, predicted_action, model_id)
+    store_user_input(normalizer_text, predicted_action, model_id, db)
 
     amount, number, operator = charge_pos_tagging(sentence)
 
