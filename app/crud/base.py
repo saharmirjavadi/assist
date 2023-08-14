@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 
 class BaseCRUD:
@@ -26,5 +27,8 @@ class BaseCRUD:
     def get_all(self, db: Session):
         return db.query(self.model).all()
 
-    def get_latest_one(self, db: Session):
-        return db.query(self.model).order_by(self.model.id.desc()).first()
+    def get_best_model(self, db: Session):
+        return db.query(self.model).filter_by(is_current_model=True).first()
+
+    def get_max_accuracy(self, db: Session):
+        return db.query(func.max(self.model.accuracy)).scalar()

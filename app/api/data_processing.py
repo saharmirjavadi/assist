@@ -27,7 +27,7 @@ def sentence_tokenizer(sentence):
 
 def predict_sentence(tokenized_text):
     base_crud = BaseCRUD(MLModel)
-    ml_model = base_crud.get_latest_one(db=SessionLocal())
+    ml_model = base_crud.get_best_model(db=SessionLocal())
     serialized_model = ml_model.model_data
 
     with io.BytesIO(serialized_model) as f:

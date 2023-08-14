@@ -45,5 +45,8 @@ def naive_bayes(db):
         serialized_model = f.read()
 
     base_crud = BaseCRUD(MLModel)
-    base_crud.create(db=db, accuracy=accuracy, model_data=serialized_model)
+    max_model_accuracy = base_crud.get_max_accuracy(db=db)
+    is_current_model = True if str(accuracy) >= max_model_accuracy else False
+    base_crud.create(db=db, accuracy=accuracy,
+                     model_data=serialized_model, is_current_model=is_current_model)
     os.remove(os.getcwd()+"/app/models/nb-model.joblib")
