@@ -1,7 +1,6 @@
-from ...crud.base import BaseCRUD
-from ...models.assist_models import TrainingData
+from ...crud.training_data import training_data_crud
 from ...db.session import SessionLocal
-from ...api.preparation_models import naive_bayes
+from ...services.training_models import naive_bayes
 from datetime import datetime
 
 
@@ -13,7 +12,6 @@ def init_db():
             line = line.strip()
             if line:
                 sentence, action = line.split(" - ")
-                base_crud = BaseCRUD(TrainingData)
-                base_crud.create(db=db, sentence=sentence,
-                                 predicted_action=action)
+                training_data_crud.create(db=db, formal_sentence=sentence,
+                                          predicted_action=action)
     naive_bayes(db)

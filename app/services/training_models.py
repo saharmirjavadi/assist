@@ -1,21 +1,18 @@
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
-from ..models.assist_models import TrainingData
 from sklearn.naive_bayes import MultinomialNB
-from ..models.assist_models import MLModel
 from hazm import word_tokenize, Normalizer
 from sklearn.metrics import accuracy_score
-from ..crud.base import BaseCRUD
+from ..crud.ml_model import ml_model_crud
+from ..crud.training_data import training_data_crud
 from sklearn.pipeline import Pipeline
 import joblib
 import os
 
 
 def naive_bayes(db):
-    base_crud = BaseCRUD(TrainingData)
-
-    training_data = base_crud.get_all(db=db)
-    texts = [item.sentence for item in training_data]
+    training_data = training_data_crud.get_all(db=db)
+    texts = [item.formal_sentence for item in training_data]
     actions = [item.predicted_action for item in training_data]
 
     normalizer = Normalizer()
@@ -44,9 +41,9 @@ def naive_bayes(db):
     with open(os.getcwd()+"/app/models/nb-model.joblib", "rb") as f:
         serialized_model = f.read()
 
-    base_crud = BaseCRUD(MLModel)
-    max_model_accuracy = base_crud.get_max_accuracy(db=db)
-    is_current_model = True if str(accuracy) >= max_model_accuracy else False
-    base_crud.create(db=db, accuracy=accuracy,
-                     model_data=serialized_model, is_current_model=is_current_model)
+    max_model_accuracy = ml_model_crud.get_max_accuracy(db=db)
+    max_accuracy = '0' if max_model_accuracy is None else max_model_accuracy
+    current_model = True if str(accuracy) >= max_accuracy else False
+    ml_model_crud.create(db=db, accuracy=accuracy,
+                         model_data=serialized_model, current_model=current_model)
     os.remove(os.getcwd()+"/app/models/nb-model.joblib")

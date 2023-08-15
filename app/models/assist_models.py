@@ -1,24 +1,24 @@
-from sqlalchemy import Column, Integer, LargeBinary, String, ForeignKey, Enum, Boolean, func, DateTime
+from sqlalchemy import Column, LargeBinary, String, ForeignKey, Enum, Boolean, DateTime, UUID, func
 from app.db.base_class import Base
+import uuid
 
 
 class MLModel(Base):
     __tablename__ = 'ml_models'
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     accuracy = Column(String)
     model_data = Column(LargeBinary)
-    is_current_model = Column(Boolean, default=False)
+    current_model = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
 class TrainingData(Base):
     __tablename__ = 'training_data'
 
-    id = Column(Integer, primary_key=True)
-    sentence = Column(String, nullable=False)
-    predicted_action = Column(Enum('charge', 'internet', 'card_transfer', 'uncertain',
-                                   name="action_types"), nullable=False)
-    model_id = Column(Integer, ForeignKey(
-        'ml_models.id', ondelete='CASCADE'), nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sentence = Column(String, nullable=True)
+    formal_sentence = Column(String, nullable=False)
+    model_id = Column(UUID, ForeignKey('ml_models.id', ondelete='CASCADE'), nullable=True)
+    predicted_action = Column(Enum('charge', 'internet', 'card_transfer', 'uncertain', name="action_types"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
