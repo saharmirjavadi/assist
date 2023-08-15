@@ -1,4 +1,4 @@
-from sqlalchemy import Column, LargeBinary, String, ForeignKey, Enum, Boolean, DateTime, UUID, func
+from sqlalchemy import Column, LargeBinary, String, ForeignKey, Enum, Boolean, DateTime, UUID, JSON, func
 from app.db.base_class import Base
 import uuid
 
@@ -10,6 +10,7 @@ class MLModel(Base):
     accuracy = Column(String)
     model_data = Column(LargeBinary)
     current_model = Column(Boolean, default=False)
+    metrics = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 

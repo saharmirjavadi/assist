@@ -2,7 +2,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from hazm import word_tokenize, Normalizer
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from ..crud.ml_model import ml_model_crud
 from ..crud.training_data import training_data_crud
 from sklearn.pipeline import Pipeline
@@ -34,6 +34,16 @@ def naive_bayes(db):
     pipeline.fit(X_train, y_train)
     y_pred = pipeline.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
+    cls_report = {}
+    precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average=None)
+
+    for class_name, p, r, f in zip(pipeline.classes_, precision, recall, f1):
+        class_metrics = {
+            "Precision": p,
+            "Recall": r,
+            "F1-score": f
+        }
+        cls_report[class_name] = class_metrics
 
     with open(os.getcwd() + "/app/models/nb-model.joblib", "wb") as f:
         joblib.dump(pipeline, f)
@@ -45,5 +55,5 @@ def naive_bayes(db):
     max_accuracy = '0' if max_model_accuracy is None else max_model_accuracy
     current_model = True if str(accuracy) >= max_accuracy else False
     ml_model_crud.create(db=db, accuracy=accuracy,
-                         model_data=serialized_model, current_model=current_model)
+                         model_data=serialized_model, current_model=current_model, metrics=cls_report)
     os.remove(os.getcwd()+"/app/models/nb-model.joblib")

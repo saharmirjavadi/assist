@@ -8,28 +8,6 @@ import io
 from .pos_tagging import charge_pos_tagging
 
 
-def charge_prediction(sentence, db):
-    # Normalize the sentence
-    normalizer_text = sentence_normalizer(sentence)
-
-    # Tokenize the sentence
-    tokenized_text = sentence_tokenizer(normalizer_text)
-
-    # Predict the action for the sentence
-    predicted_action, model_id = predict_sentence(tokenized_text)
-
-    # Save user input
-    store_user_input(sentence, normalizer_text, predicted_action, model_id, db)
-
-    amount, number, operator = charge_pos_tagging(sentence)
-
-    return {
-        "predicted_action": predicted_action,
-        "amount": amount,
-        "number": number,
-        "operator": operator
-    }
-
 
 def predict_sentence(tokenized_text):
     ml_model = ml_model_crud.get_best_model(db=SessionLocal())
@@ -55,3 +33,26 @@ def predict_sentence(tokenized_text):
         action = "uncertain"
 
     return action, ml_model.id
+
+
+def charge_prediction(sentence, db):
+    # Normalize the sentence
+    normalizer_text = sentence_normalizer(sentence)
+
+    # Tokenize the sentence
+    tokenized_text = sentence_tokenizer(normalizer_text)
+
+    # Predict the action for the sentence
+    predicted_action, model_id = predict_sentence(tokenized_text)
+
+    # Save user input
+    store_user_input(sentence, normalizer_text, predicted_action, model_id, db)
+
+    amount, number, operator = charge_pos_tagging(sentence)
+
+    return {
+        "predicted_action": predicted_action,
+        "amount": amount,
+        "number": number,
+        "operator": operator
+    }
