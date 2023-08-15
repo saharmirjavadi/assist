@@ -1,59 +1,15 @@
-from hazm import word_tokenize, Normalizer, InformalNormalizer, POSTagger
+from hazm import word_tokenize, InformalNormalizer, POSTagger
 from persian_tools import phone_number, digits
-from .phone_operator import get_phone_operator
+from ..utils.phone_operator import get_phone_operator
 from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
-from ..crud.base import BaseCRUD
-from ..models.assist_models import MLModel, TrainingData
-from ..db.session import SessionLocal
-from joblib import load
 import difflib
 import re
 import os
-import io
-
-
-def sentence_normalizer(sentence):
-    normalizer = Normalizer()
-    normalized_text = normalizer.normalize(sentence)
-    return normalized_text
-
-
-def sentence_tokenizer(sentence):
-    tokenized_text = word_tokenize(sentence)
-    normalized_text = ' '.join(tokenized_text)
-    return normalized_text
-
-
-def predict_sentence(tokenized_text):
-    base_crud = BaseCRUD(MLModel)
-    ml_model = base_crud.get_best_model(db=SessionLocal())
-    serialized_model = ml_model.model_data
-
-    with io.BytesIO(serialized_model) as f:
-        loaded_pipeline = load(f)
-
-    loaded_model = loaded_pipeline.named_steps['classifier']
-    vectorizer = loaded_pipeline.named_steps['vectorizer']
-
-    text_vectorized = vectorizer.transform([tokenized_text])
-
-    predicted_proba = loaded_model.predict_proba(text_vectorized)
-    max_proba = max(predicted_proba[0])
-
-    confidence_threshold = 0.9
-
-    if max_proba >= confidence_threshold:
-        predicted_label_index = predicted_proba.argmax()
-        action = loaded_model.classes_[predicted_label_index]
-    else:
-        action = "uncertain"
-
-    return action, ml_model.id
 
 
 def charge_pos_tagging(sentence):
-    tagger = POSTagger(model=os.getcwd()+'/app/models/pos_tagger.model')
+    tagger = POSTagger(model=os.getcwd()+'/app/resources/pos_tagger.model')
     normalized_sentence = InformalNormalizer(decrease_repeated_chars=True,
                                              correct_spacing=True,
                                              remove_specials_chars=True,
@@ -117,33 +73,3 @@ def charge_pos_tagging(sentence):
         operator = get_phone_operator(PhoneNumber(mobile=mobile))
 
     return amount, mobile, operator
-
-
-def store_user_input(sentence, action, model_id, db):
-    base_crud = BaseCRUD(TrainingData)
-    training_data_obj = {'sentence': sentence,
-                         'predicted_action': action, 'model_id': model_id}
-    base_crud.create(db=db, **training_data_obj)
-
-
-def charge_prediction(sentence, db):
-    # Normalize the sentence
-    normalizer_text = sentence_normalizer(sentence)
-
-    # Tokenize the sentence
-    tokenized_text = sentence_tokenizer(normalizer_text)
-
-    # Predict the action for the sentence
-    predicted_action, model_id = predict_sentence(tokenized_text)
-
-    # Save user input
-    store_user_input(normalizer_text, predicted_action, model_id, db)
-
-    amount, number, operator = charge_pos_tagging(sentence)
-
-    return {
-        "predicted_action": predicted_action,
-        "amount": amount,
-        "number": number,
-        "operator": operator
-    }
