@@ -1,8 +1,8 @@
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from hazm import word_tokenize, Normalizer
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from ..crud.ml_model import ml_model_crud
 from ..crud.training_data import training_data_crud
 from sklearn.pipeline import Pipeline

@@ -1,8 +1,10 @@
 from hazm import word_tokenize, InformalNormalizer, POSTagger
 from persian_tools import phone_number, digits
 from ..utils.phone_operator import get_phone_operator
+from ..utils.package_durations import find_package_duration
 from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
+from .pre_processing import sentence_normalizer
 import difflib
 import re
 import os
@@ -73,3 +75,42 @@ def charge_pos_tagging(sentence):
         operator = get_phone_operator(PhoneNumber(mobile=mobile))
 
     return amount, mobile, operator
+
+
+def internet_pos_tagging(sentence):
+    tagger = POSTagger(model=os.getcwd()+'/app/resources/pos_tagger.model')
+    normalized_sentence = sentence_normalizer(sentence)
+
+    tokenized_sentence = word_tokenize(normalized_sentence)
+    tagged_sentence = tagger.tag(tokenized_sentence)
+
+    mobile = None
+    operator = None
+    operators = ["ایرانسل", "همراه اول", "رایتل"]
+
+    for word, tag in tagged_sentence:
+        if tag == 'VERB':
+            tokenized_sentence.remove(word)
+
+        if tag == 'NUM':
+            number = convert_fa_numbers(word)
+            if phone_number.validate(number):
+                tokenized_sentence.remove(word)
+                mobile = number
+
+        for keyword in operators:
+            similarity_score = difflib.SequenceMatcher(
+                None, keyword, word).ratio()
+            if similarity_score >= 0.8:
+                operator = keyword
+        pattern = r"(\S+)\s+(گیگ|مگ|مگابایت|گیگابایت|گیگا)"
+        match = re.search(pattern, normalized_sentence)
+        if match:
+            package_value = digits.convert_from_word((match.group(1)))
+            package = f'{match.group(2)} {package_value}'
+
+    package_duration = find_package_duration(normalized_sentence)
+    if not operator and mobile:
+        operator = get_phone_operator(PhoneNumber(mobile=mobile))
+
+    return mobile, operator, package, package_duration

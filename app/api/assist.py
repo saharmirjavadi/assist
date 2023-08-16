@@ -1,11 +1,11 @@
 from .api_base import APIBaseClass
 from ..schemas.prediction_validation import PredictionRequest
-from ..services.pre_processing import *
+from ..operations.pre_processing import *
 from ..db.dependency import get_db
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from ..services.training_models import *
-from ..services.prediction import charge_prediction
+from ..operations.training_models import *
+from ..operations.prediction import prediction
 
 
 class Assistant(APIBaseClass):
@@ -17,4 +17,4 @@ class Assistant(APIBaseClass):
 
     async def prediction(self, prediction_request: PredictionRequest, db: Session = Depends(get_db)):
         sentence = prediction_request.sentence
-        return charge_prediction(sentence, db)
+        return prediction(sentence, db)
