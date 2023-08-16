@@ -1,12 +1,11 @@
 
 from .pos_tagging import charge_pos_tagging
 from .pre_processing import sentence_normalizer, sentence_tokenizer, store_user_input
+from .pos_tagging import charge_pos_tagging, internet_pos_tagging
 from ..crud.ml_model import ml_model_crud
 from ..db.session import SessionLocal
 from joblib import load
 import io
-from .pos_tagging import charge_pos_tagging
-
 
 
 def predict_sentence(tokenized_text):
@@ -35,7 +34,7 @@ def predict_sentence(tokenized_text):
     return action, ml_model.id
 
 
-def charge_prediction(sentence, db):
+def prediction(sentence, db):
     # Normalize the sentence
     normalizer_text = sentence_normalizer(sentence)
 
@@ -48,11 +47,20 @@ def charge_prediction(sentence, db):
     # Save user input
     store_user_input(sentence, normalizer_text, predicted_action, model_id, db)
 
-    amount, number, operator = charge_pos_tagging(sentence)
-
-    return {
-        "predicted_action": predicted_action,
-        "amount": amount,
-        "number": number,
-        "operator": operator
-    }
+    if predicted_action == 'charge':
+        amount, number, operator = charge_pos_tagging(sentence)
+        return {
+            "predicted_action": predicted_action,
+            "amount": amount,
+            "number": number,
+            "operator": operator
+        }
+    elif 'internet':
+        mobile, operator, package, package_duration = internet_pos_tagging(sentence)
+        return {
+            "predicted_action": predicted_action,
+            "number": mobile,
+            "operator": operator,
+            "package": package,
+            "package_duration": package_duration
+        }

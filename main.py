@@ -27,8 +27,8 @@ run_time = datetime.now(TZ)
 date_trigger = DateTrigger(run_time, timezone=TZ)
 scheduler.add_job(init_db, date_trigger)
 
-reinforcement_model_run_time = run_time + timedelta(minutes=1)
-reinforcement_model_trigger = IntervalTrigger(minutes=1,
+reinforcement_model_run_time = run_time + timedelta(minutes=30)
+reinforcement_model_trigger = IntervalTrigger(minutes=30,
                                               start_date=reinforcement_model_run_time,
                                               timezone=TZ)
 scheduler.add_job(reinforcement_model, reinforcement_model_trigger)

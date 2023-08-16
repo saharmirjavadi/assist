@@ -1,6 +1,6 @@
 from ...db.session import SessionLocal
 from datetime import datetime
-from ...services.training_models import naive_bayes
+from ...operations.training_models import naive_bayes
 
 
 def reinforcement_model() -> None:
