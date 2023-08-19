@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from hazm import word_tokenize, Normalizer
 from ..crud.ml_model import ml_model_crud
+from ..crud.ml_model_history import ml_model_history_crud
 from ..crud.training_data import training_data_crud
 from sklearn.pipeline import Pipeline
 import joblib
@@ -16,8 +17,10 @@ def naive_bayes(db):
     actions = [item.predicted_action for item in training_data]
 
     normalizer = Normalizer()
-    sentences_normalized = [normalizer.normalize(sentence) for sentence in texts]
-    sentences_tokenized = [word_tokenize(sentence) for sentence in sentences_normalized]
+    sentences_normalized = [normalizer.normalize(
+        sentence) for sentence in texts]
+    sentences_tokenized = [word_tokenize(sentence)
+                           for sentence in sentences_normalized]
     normalized_sentences = [' '.join(tokens) for tokens in sentences_tokenized]
 
     pipeline = Pipeline([
@@ -35,7 +38,8 @@ def naive_bayes(db):
     y_pred = pipeline.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     cls_report = {}
-    precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average=None)
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_test, y_pred, average=None)
 
     for class_name, p, r, f in zip(pipeline.classes_, precision, recall, f1):
         class_metrics = {
@@ -51,9 +55,15 @@ def naive_bayes(db):
     with open(os.getcwd()+"/app/models/nb-model.joblib", "rb") as f:
         serialized_model = f.read()
 
-    max_model_accuracy = ml_model_crud.get_max_accuracy(db=db)
+    max_model_accuracy = ml_model_history_crud.get_max_accuracy(db=db)
     max_accuracy = '0' if max_model_accuracy is None else max_model_accuracy
     current_model = True if str(accuracy) >= max_accuracy else False
-    ml_model_crud.create(db=db, accuracy=accuracy,
-                         model_data=serialized_model, current_model=current_model, metrics=cls_report)
+    if current_model:
+        ml_model_crud.create_or_update(db=db, 
+                                       accuracy=accuracy,  
+                                       name='MultinomialNB',
+                                       model_data=serialized_model, 
+                                       current_model=current_model, 
+                                       metrics=cls_report)
+    ml_model_history_crud.create(db=db, name='MultinomialNB', accuracy=accuracy, metrics=cls_report)
     os.remove(os.getcwd()+"/app/models/nb-model.joblib")

@@ -5,8 +5,8 @@ class BaseCRUD:
     def __init__(self, model):
         self.model = model
 
-    def get(self, db: Session, item_id: int):
-        return db.query(self.model).filter(self.model.id == item_id).first()
+    def get(self, db: Session, **kwargs):
+        return db.query(self.model).filter_by(**kwargs).first()
 
     def create(self, db: Session, **kwargs):
         item = self.model(**kwargs)
@@ -25,3 +25,9 @@ class BaseCRUD:
 
     def get_all(self, db: Session):
         return db.query(self.model).all()
+
+    def update(self, db: Session, item_id: int, **kwargs):
+        item = self.get(db, id=item_id)
+        if item:
+            db.query(self.model).filter_by(id=item_id).update(kwargs)
+            db.commit()
