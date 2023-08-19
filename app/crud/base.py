@@ -29,8 +29,5 @@ class BaseCRUD:
     def update(self, db: Session, item_id: int, **kwargs):
         item = self.get(db, id=item_id)
         if item:
-            for key, value in kwargs.items():
-                setattr(item, key, value)
+            db.query(self.model).filter_by(id=item_id).update(kwargs)
             db.commit()
-            return True
-        return False

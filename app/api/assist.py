@@ -1,11 +1,11 @@
 from .api_base import APIBaseClass
 from ..schemas.prediction_validation import PredictionRequest
-from ..operations.pre_processing import *
+from ..modules.pre_processing import *
 from ..db.dependency import get_db
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from ..operations.training_models import *
-from ..operations.prediction import prediction
+from ..modules.training_models import *
+from ..modules.prediction import prediction
 
 
 class Assistant(APIBaseClass):
