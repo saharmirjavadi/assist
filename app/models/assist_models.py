@@ -9,7 +9,7 @@ class MLModel(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     accuracy = Column(String)
     name = Column(String)
-    model_data = Column(LargeBinary)
+    trained_model = Column(LargeBinary)
     current_model = Column(Boolean, default=False)
     metrics = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
