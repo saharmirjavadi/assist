@@ -6,8 +6,8 @@ from app.models.assist_models import MLModel
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from config import Settings
-from app.pipelines.initialize_db.init_db import init_db
-from app.pipelines.training_data_proccess.store_training_data import reinforcement_model
+from app.pipelines.init_db import init_db
+from app.pipelines.store_training_data import reinforcement_model
 
 from datetime import datetime, timedelta
 import pytz

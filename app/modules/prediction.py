@@ -10,9 +10,9 @@ import io
 
 def predict_sentence(tokenized_text):
     ml_model = ml_model_crud.get_best_model(db=SessionLocal())
-    serialized_model = ml_model.model_data
+    trained_model = ml_model.trained_model
 
-    with io.BytesIO(serialized_model) as f:
+    with io.BytesIO(trained_model) as f:
         loaded_pipeline = load(f)
 
     loaded_model = loaded_pipeline.named_steps['classifier']

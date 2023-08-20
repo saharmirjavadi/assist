@@ -9,6 +9,8 @@ from ..crud.training_data import training_data_crud
 from sklearn.pipeline import Pipeline
 import joblib
 import os
+from ..schemas.ml_model_validations import MLModelCreate
+from ..schemas.ml_model_history_validations import MLModelHistoryCreate
 
 
 def naive_bayes(db):
@@ -53,17 +55,21 @@ def naive_bayes(db):
         joblib.dump(pipeline, f)
 
     with open(os.getcwd()+"/app/models/nb-model.joblib", "rb") as f:
-        serialized_model = f.read()
+        trained_model = f.read()
 
     max_model_accuracy = ml_model_history_crud.get_max_accuracy(db=db)
     max_accuracy = '0' if max_model_accuracy is None else max_model_accuracy
     current_model = True if str(accuracy) >= max_accuracy else False
     if current_model:
-        ml_model_crud.create_or_update(db=db, 
-                                       accuracy=accuracy,  
-                                       name='MultinomialNB',
-                                       model_data=serialized_model, 
-                                       current_model=current_model, 
-                                       metrics=cls_report)
-    ml_model_history_crud.create(db=db, name='MultinomialNB', accuracy=accuracy, metrics=cls_report)
+        model_data = MLModelCreate(
+            accuracy=str(accuracy),
+            name='MultinomialNB',
+            trained_model=trained_model,
+            current_model=current_model,
+            metrics=cls_report
+        )
+        ml_model_crud.create_or_update(db=db,
+                                       model_data=model_data)
+    ml_model_history_crud.create(db=db,
+                                 model_history_data=MLModelHistoryCreate(name='MultinomialNB', accuracy=str(accuracy), metrics=cls_report))
     os.remove(os.getcwd()+"/app/models/nb-model.joblib")
