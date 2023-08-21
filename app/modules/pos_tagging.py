@@ -2,10 +2,11 @@ from hazm import word_tokenize, InformalNormalizer, POSTagger
 from persian_tools import phone_number, digits
 from ..utils.phone_operator import get_phone_operator
 from ..utils.package_durations import find_package_duration
+from ..utils.mobile_operator import find_operator_enum
 from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
 from .pre_processing import sentence_normalizer
-import difflib
+from ..utils.package_volume import find_package_volume
 import re
 import os
 
@@ -30,7 +31,6 @@ def charge_pos_tagging(sentence):
     mobile = None
     operator = None
     currency_symbol = 'ریال'
-    operators = ["ایرانسل", "همراه اول", "رایتل"]
 
     for word, tag in tagged_sentence:
         # print(tag, word)
@@ -42,12 +42,7 @@ def charge_pos_tagging(sentence):
             if phone_number.validate(number):
                 tokenized_sentence.remove(word)
                 mobile = number
-
-        for keyword in operators:
-            similarity_score = difflib.SequenceMatcher(
-                None, keyword, word).ratio()
-            if similarity_score >= 0.8:
-                operator = keyword
+        operator = find_operator_enum(word)
 
     normalized_text = ' '.join(tokenized_sentence)
 
@@ -86,9 +81,10 @@ def internet_pos_tagging(sentence):
 
     mobile = None
     operator = None
-    operators = ["ایرانسل", "همراه اول", "رایتل"]
+    package = '1 گیگابایت'
 
     for word, tag in tagged_sentence:
+        # print(word, tag)
         if tag == 'VERB':
             tokenized_sentence.remove(word)
 
@@ -98,16 +94,14 @@ def internet_pos_tagging(sentence):
                 tokenized_sentence.remove(word)
                 mobile = number
 
-        for keyword in operators:
-            similarity_score = difflib.SequenceMatcher(
-                None, keyword, word).ratio()
-            if similarity_score >= 0.8:
-                operator = keyword
-        pattern = r"(\S+)\s+(گیگ|مگ|مگابایت|گیگابایت|گیگا)"
+        operator = find_operator_enum(word)
+
+        pattern = r"(\S+)\s+(گیگ|مگ|مگابایت|گیگابایت|گیگا|gig|meg)"
         match = re.search(pattern, normalized_sentence)
         if match:
             package_value = digits.convert_from_word((match.group(1)))
-            package = f'{match.group(2)} {package_value}'
+            volume = find_package_volume(match.group(2))
+            package = f'{volume} {package_value}'
 
     package_duration = find_package_duration(normalized_sentence)
     if not operator and mobile:

@@ -34,5 +34,5 @@ class TrainingData(Base):
     sentence = Column(String, nullable=True)
     formal_sentence = Column(String, nullable=False)
     model_id = Column(UUID, ForeignKey('ml_models.id', ondelete='CASCADE'), nullable=True)
-    predicted_action = Column(Enum('charge', 'internet', 'card_transfer', 'uncertain', name="action_types"), nullable=False)
+    predicted_action = Column(Enum('شارژ', 'اینترنت', 'انتقال وجه', 'نامشخص', name="action_types"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())

@@ -29,7 +29,7 @@ def predict_sentence(tokenized_text):
         predicted_label_index = predicted_proba.argmax()
         action = loaded_model.classes_[predicted_label_index]
     else:
-        action = "uncertain"
+        action = "نامشخص"
 
     return action, ml_model.id
 
@@ -47,7 +47,7 @@ def prediction(sentence, db):
     # Save user input
     store_user_input(sentence, normalizer_text, predicted_action, model_id, db)
 
-    if predicted_action == 'charge':
+    if predicted_action == 'شارژ':
         amount, number, operator = charge_pos_tagging(sentence)
         return {
             "predicted_action": predicted_action,
@@ -55,7 +55,7 @@ def prediction(sentence, db):
             "number": number,
             "operator": operator
         }
-    elif 'internet':
+    elif 'اینترنت':
         mobile, operator, package, package_duration = internet_pos_tagging(sentence)
         return {
             "predicted_action": predicted_action,
