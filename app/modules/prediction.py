@@ -52,15 +52,17 @@ def prediction(sentence, db):
         return {
             "predicted_action": predicted_action,
             "amount": amount,
-            "number": number,
-            "operator": operator
+            "mobile": number,
+            "operatorType": operator,
+            "type": 0,
         }
     elif 'اینترنت':
         mobile, operator, package, package_duration = internet_pos_tagging(sentence)
         return {
             "predicted_action": predicted_action,
-            "number": mobile,
-            "operator": operator,
+            "mobile": mobile,
+            "operatorType": operator,
             "package": package,
-            "package_duration": package_duration
+            "package_duration": package_duration,
+            "type": 0,
         }
