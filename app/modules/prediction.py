@@ -53,7 +53,7 @@ def prediction(sentence, db):
             "predicted_action": predicted_action,
             "amount": amount,
             "mobile": number,
-            "operatorType": operator,
+            "operator_type": operator,
             "type": 0,
         }
     elif 'اینترنت':
@@ -61,7 +61,7 @@ def prediction(sentence, db):
         return {
             "predicted_action": predicted_action,
             "mobile": mobile,
-            "operatorType": operator,
+            "operator_type": operator,
             "package": package,
             "package_duration": package_duration,
             "type": 0,

@@ -101,7 +101,7 @@ def internet_pos_tagging(sentence):
         if match:
             package_value = digits.convert_from_word((match.group(1)))
             volume = find_package_volume(match.group(2))
-            package = f'{volume} {package_value}'
+            package = f'{package_value}{volume}'
 
     package_duration = find_package_duration(normalized_sentence)
     if not operator and mobile:
