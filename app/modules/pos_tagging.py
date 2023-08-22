@@ -7,6 +7,7 @@ from persian import convert_fa_numbers
 from ..schemas.phone_number_validation import PhoneNumber
 from .pre_processing import sentence_normalizer
 from ..utils.package_volume import find_package_volume
+from ..utils.phone_type import find_phone_type
 import re
 import os
 
@@ -81,7 +82,8 @@ def internet_pos_tagging(sentence):
 
     mobile = None
     operator = None
-    package = '1 گیگابایت'
+    package_value = 1
+    volume = 'گیگابایت'
 
     for word, tag in tagged_sentence:
         # print(word, tag)
@@ -101,10 +103,11 @@ def internet_pos_tagging(sentence):
         if match:
             package_value = digits.convert_from_word((match.group(1)))
             volume = find_package_volume(match.group(2))
-            package = f'{package_value}{volume}'
 
     package_duration = find_package_duration(normalized_sentence)
     if not operator and mobile:
         operator = get_phone_operator(PhoneNumber(mobile=mobile))
 
-    return mobile, operator, package, package_duration
+    phone_type = find_phone_type(normalized_sentence)
+
+    return mobile, operator, package_value, volume, package_duration, phone_type
