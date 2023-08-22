@@ -83,7 +83,7 @@ def internet_pos_tagging(sentence):
     mobile = None
     operator = None
     package_value = 1
-    volume = 'گیگابایت'
+    volume = 'گیگ'
 
     for word, tag in tagged_sentence:
         # print(word, tag)
