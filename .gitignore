@@ -125,6 +125,7 @@ celerybeat.pid
 env/
 venv/
 ENV/
+whls/
 env.bak/
 venv.bak/
 
