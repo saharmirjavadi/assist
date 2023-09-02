@@ -1,11 +1,11 @@
 
-from .pos_tagging import charge_pos_tagging
 from .pre_processing import sentence_normalizer, sentence_tokenizer, store_user_input
 from .pos_tagging import charge_pos_tagging, internet_pos_tagging
 from ..crud.ml_model import ml_model_crud
 from ..db.session import SessionLocal
 from joblib import load
 import io
+import mlflow
 
 
 def predict_sentence(tokenized_text):
@@ -30,6 +30,19 @@ def predict_sentence(tokenized_text):
         action = loaded_model.classes_[predicted_label_index]
     else:
         action = "نامشخص"
+
+    with mlflow.start_run():
+        params = {
+            "confidence_threshold": confidence_threshold,
+        }
+        mlflow.log_params(params)
+
+        metrics = {
+            "max_probability": max_proba,
+        }
+        mlflow.log_metrics(metrics)
+
+        mlflow.sklearn.log_model(loaded_model, "model")
 
     return action, ml_model.id
 

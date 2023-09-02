@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import Settings
+from decouple import config
 
-settings = Settings()
-
-engine = create_engine(settings.db_url)
+engine = create_engine(config('DB_URL'))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

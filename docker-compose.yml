@@ -24,5 +24,12 @@ services:
       - POSTGRES_PASSWORD=1234
       - POSTGRES_DB=assist
 
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    ports:
+      - 5000:5000
+    volumes:
+      - /path/to/mlflow/data:/mlflow
+
 volumes:
   postgres_data:

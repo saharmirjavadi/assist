@@ -5,7 +5,6 @@ from app.db.base_class import Base
 from app.models.assist_models import MLModel
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from config import Settings
 from app.pipelines.init_db import init_db
 from app.pipelines.store_training_data import reinforcement_model
 
