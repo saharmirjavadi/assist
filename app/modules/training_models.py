@@ -41,7 +41,7 @@ def naive_bayes(db):
     accuracy = accuracy_score(y_test, y_pred)
     cls_report = {}
     precision, recall, f1, _ = precision_recall_fscore_support(
-        y_test, y_pred, average=None)
+        y_test, y_pred, average=None, zero_division=1)
 
     for class_name, p, r, f in zip(pipeline.classes_, precision, recall, f1):
         class_metrics = {

@@ -129,6 +129,8 @@ whls/
 env.bak/
 venv.bak/
 mlruns/
+mlartifacts/
+mlflow/
 
 # Spyder project settings
 .spyderproject

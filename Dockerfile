@@ -2,7 +2,7 @@
 FROM python:3.9.12-slim
 
 # Install libpq-dev for psycopg2 and development tools
-RUN apt-get update && apt-get install -y libpq-dev build-essential
+RUN apt update && apt install -y libpq-dev build-essential git
 
 WORKDIR /app
 

@@ -4,6 +4,7 @@ from .pos_tagging import charge_pos_tagging, internet_pos_tagging
 from ..crud.ml_model import ml_model_crud
 from ..db.session import SessionLocal
 from joblib import load
+from decouple import config
 import io
 import mlflow
 
@@ -31,6 +32,7 @@ def predict_sentence(tokenized_text):
     else:
         action = "نامشخص"
 
+    mlflow.set_tracking_uri(config('MLFLOW_TRACKING_URI'))
     with mlflow.start_run():
         params = {
             "confidence_threshold": confidence_threshold,
